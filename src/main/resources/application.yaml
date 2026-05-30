@@ -1,0 +1,11 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - github.mixexsu.HttpKt.configureHttp
+      - github.mixexsu.SerializationKt.configureSerialization
+      - github.mixexsu.SecurityKt.configureSecurity
+      - github.mixexsu.ExposedKt.configureExposed
+      - github.mixexsu.PostgresKt.configurePostgres
+      - github.mixexsu.RoutingKt.configureRouting

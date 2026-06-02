@@ -15,7 +15,7 @@ fun main() {
 
 fun Application.run() {
     databaseconnect()
-    routing()
     jwtConfiguration()
+    routing()
 }
 

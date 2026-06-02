@@ -1,7 +1,8 @@
 package github.mixexsu.application.operations
 
 import github.mixexsu.data.dao.Users
-import github.mixexsu.application.dtos.userDto
+import github.mixexsu.application.dtos.userDTO
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
@@ -16,13 +17,29 @@ fun createUser(username: String, password: String): Int = transaction {
     } get Users.user_id
 }
 
-fun readUserById(id: Int): userDto? = transaction {
+fun readUserById(id: Int): userDTO? = transaction {
     Users.select(Users.user_id, Users.username).where{ Users.user_id eq id }
         .map { row ->
-            userDto(
+            userDTO(
                 user_id = row[Users.user_id],
                 username = row[Users.username]
             )
         }
         .singleOrNull()
+}
+
+fun readUserByUsername(username: String): Pair<Int, String>? = transaction {
+    Users.select(Users.user_id, Users.username, Users.password).where {
+        Users.username eq username
+    }
+        .map { row ->
+            Pair(row[Users.user_id], row[Users.password]) // возвращаем id и хеш пароля
+        }
+        .singleOrNull()
+}
+
+fun userExists(username: String): Boolean = transaction {
+    Users.select(Users.user_id).where {
+        Users.username eq username
+    }.count() > 0
 }

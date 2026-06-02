@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.postgresql)
     implementation("org.jetbrains.exposed:exposed-dao:1.2.0")
     implementation("org.postgresql:r2dbc-postgresql:1.1.0.RELEASE")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:1.2.0")
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)

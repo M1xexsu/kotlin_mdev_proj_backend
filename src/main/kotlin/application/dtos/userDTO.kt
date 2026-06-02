@@ -1,6 +1,9 @@
 package github.mixexsu.application.dtos
 
-data class userDto(
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class userDTO(
     val user_id: Int,
     val username: String
     )

@@ -2,6 +2,7 @@ package github.mixexsu.application.controller
 
 import github.mixexsu.application.dtos.busesDTO
 import github.mixexsu.application.routing.routing
+import github.mixexsu.application.usecase.getallstations
 import github.mixexsu.application.usecase.getarrive
 import github.mixexsu.application.usecase.getarriveSortEnd
 import io.ktor.http.HttpStatusCode
@@ -17,6 +18,15 @@ import org.postgresql.gss.MakeGSS.authenticate
 fun Application.arriveController()
 {
     routing{
+        get("/arrive") {
+            try {
+                call.respond(getallstations())
+            }
+            catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
         get("/arrive/{arrive}")
         {
             try {

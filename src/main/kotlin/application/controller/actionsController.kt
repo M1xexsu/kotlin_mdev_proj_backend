@@ -2,8 +2,10 @@ package github.mixexsu.application.controller
 
 import github.mixexsu.application.dtos.busesDTO
 import github.mixexsu.application.dtos.postArriveDTO
+import github.mixexsu.application.dtos.stationsDTO
 import github.mixexsu.application.routing.routing
 import github.mixexsu.application.usecase.addbus
+import github.mixexsu.application.usecase.addstation
 import github.mixexsu.application.usecase.pusharrive
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -33,6 +35,8 @@ fun Application.actionsController() {
             }
 
             post("/admin/station"){
+                val request = call.receive<stationsDTO>()
+                addstation(request)
 
                 call.respond(HttpStatusCode.OK)
             }

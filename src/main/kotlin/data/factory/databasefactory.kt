@@ -14,7 +14,7 @@ fun databaseconnect()
 {
     //В идеале это стоит вынести в yaml файл//
     Database.connect(
-        url = "jdbc:postgresql://127.0.0.1:5432/postgress",
+        url = "jdbc:postgresql://127.0.0.1:5432/postgres",
         driver = "org.postgresql.Driver",
         user = "postgres",
         password = "postgres"

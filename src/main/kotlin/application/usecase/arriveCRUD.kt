@@ -10,15 +10,15 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 
 /*
 Неиронично, но для меня данные функции подобны пытке. Вот что бывает,
 когда тебя насильно пересаживают на ktor(не хватает нормального указания связей от слова совсем)
  */
-fun getarrive(_id: Int) : List<arriveDTO>
-{
-    return Arrive
+fun getarrive(_id: Int) : List<arriveDTO> = transaction {
+    Arrive
         .innerJoin(Buses)
         .innerJoin(Stations)
         .select(Arrive.columns)
@@ -44,9 +44,8 @@ fun getarrive(_id: Int) : List<arriveDTO>
 }
 
 //Функция, подобная выше, но также сортирует по конечной точке, а не по всем прибывающим автобусам
-fun getarriveSortEnd(_id: Int, _end: Int) : List<arriveDTO>
-{
-    return Arrive
+fun getarriveSortEnd(_id: Int, _end: Int) : List<arriveDTO> = transaction {
+    Arrive
         .innerJoin(Buses)
         .innerJoin(Stations)
         .select(Arrive.columns)
@@ -73,8 +72,7 @@ fun getarriveSortEnd(_id: Int, _end: Int) : List<arriveDTO>
 
 //функция для отправки тела запроса на добавление новой записи о прибытии
 //Перегружен
-fun pusharrive(_l: postArriveDTO)
-{
+fun pusharrive(_l: postArriveDTO) = transaction {
     Arrive.insert {
         it[bus_id] = _l.bus_id
         it[station_id] = _l.station_id
@@ -83,8 +81,7 @@ fun pusharrive(_l: postArriveDTO)
     }
 }
 
-fun pusharrive(_l: List<postArriveDTO>)
-{
+fun pusharrive(_l: List<postArriveDTO>) = transaction {
     _l.forEach {_a ->
         Arrive.insert {
             it[bus_id] = _a.bus_id

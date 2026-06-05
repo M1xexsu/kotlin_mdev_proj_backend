@@ -23,7 +23,10 @@ fun Application.arriveController()
                 call.respond(getallstations())
             }
             catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError)
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf("error" to (e.message ?: "Internal server error"))
+                )
             }
         }
 

@@ -14,10 +14,10 @@ fun databaseconnect()
 {
     //В идеале это стоит вынести в yaml файл//
     Database.connect(
-        url = "jdbc:postgresql://ixy.su:5432/db",
+        url = "jdbc:postgresql://localhost:5432/postgres",
         driver = "org.postgresql.Driver",
-        user = "admin",
-        password = "9hRQE7d07OKH3XeGKrdD"
+        user = "postgres",
+        password = "postgres"
     )
     transaction {
         SchemaUtils.create(Users, Tokens, Stations, Buses, Arrive, Actions)

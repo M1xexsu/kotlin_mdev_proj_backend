@@ -2,7 +2,6 @@ package github.mixexsu.application.dtos
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlin.time.Instant
 
 @Serializable
 data class arriveDTO(

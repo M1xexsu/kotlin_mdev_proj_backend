@@ -1,19 +1,13 @@
 package github.mixexsu.application.controller
 
-import github.mixexsu.application.dtos.busesDTO
-import github.mixexsu.application.routing.routing
 import github.mixexsu.application.usecase.getallstations
 import github.mixexsu.application.usecase.getarrive
 import github.mixexsu.application.usecase.getarriveSortEnd
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.auth.authenticate
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import org.postgresql.gss.MakeGSS.authenticate
 
 fun Application.arriveController()
 {
@@ -30,26 +24,43 @@ fun Application.arriveController()
             }
         }
 
-        get("/arrive/{arrive}")
-        {
-            try {
-                val id = call.parameters["arrive"]!!.toInt()
-                call.respond(getarrive(id))
+        get("/arrive/{arrive}") {
+            val raw = call.parameters["arrive"]
+            val id = raw?.toIntOrNull()
+            if (id == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid arrive id"))
+                return@get
             }
-            catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest)
+
+            try {
+                val result = getarrive(id)
+                call.respond(result)
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf("error" to (e.message ?: "Internal server error"))
+                )
             }
         }
 
-        get("/arrive/{arrive}/{end}")
-        {
-            try {
-                val id = call.parameters["arrive"]!!.toInt()
-                val end = call.parameters["end"]!!.toInt()
-                call.respond(getarriveSortEnd(id, end))
+        get("/arrive/{arrive}/{end}") {
+            val raw = call.parameters["arrive"]
+            val rawEnd = call.parameters["end"]
+            val id = raw?.toIntOrNull()
+            val end = rawEnd?.toIntOrNull()
+            if (id == null || end == null) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid parameters"))
+                return@get
             }
-            catch (e: Exception) {
-                call.respond(HttpStatusCode.BadRequest)
+
+            try {
+                val result = getarriveSortEnd(id, end)
+                call.respond(result)
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf("error" to (e.message ?: "Internal server error"))
+                )
             }
         }
     }

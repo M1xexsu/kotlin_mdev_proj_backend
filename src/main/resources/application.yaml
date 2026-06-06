@@ -1,6 +1,6 @@
 ktor:
   deployment:
-    port: 8080
+    port:
   application:
     modules:
       - github.mixexsu.HttpKt.configureHttp

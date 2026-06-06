@@ -7,9 +7,9 @@ import github.mixexsu.data.dao.Arrive
 import github.mixexsu.data.dao.Stations
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 
@@ -18,54 +18,112 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 когда тебя насильно пересаживают на ktor(не хватает нормального указания связей от слова совсем)
  */
 fun getarrive(_id: Int) : List<arriveDTO> = transaction {
-    Arrive
+    (Arrive
         .innerJoin(Buses)
-        .innerJoin(Stations)
-        .select(Arrive.columns)
-        .where {
-            (Stations.station_id eq _id) and (Stations.station_id eq Arrive.station_id) and (Buses.bus_id eq Arrive.bus_id)
-        }.withDistinct().map{
+        .innerJoin(Stations))
+        .selectAll()
+        .where { (Stations.station_id eq _id) and (Arrive.station_id eq Stations.station_id) and (Arrive.bus_id eq Buses.bus_id) }
+        .withDistinct()
+        .map { row ->
+            val busId = row[Arrive.bus_id]
+            val startStationId = row[Buses.station_start]
+            val endStationId = row[Buses.station_end]
+
+            // find arrival time at start station for this bus (if exists)
+            val arriveStart = Arrive
+                .select(Arrive.columns)
+                .where { (Arrive.bus_id eq busId) and (Arrive.station_id eq startStationId) }
+                .map { r -> r[Arrive.arrive_time] }
+                .firstOrNull()
+
+            // find arrival time at end station for this bus (if exists)
+            val arriveEnd = Arrive
+                .select(Arrive.columns)
+                .where { (Arrive.bus_id eq busId) and (Arrive.station_id eq endStationId) }
+                .map { r -> r[Arrive.arrive_time] }
+                .lastOrNull()
+
+            val startStationName = Stations
+                .select(Stations.columns)
+                .where { Stations.station_id eq startStationId }
+                .map { r -> r[Stations.station_name] }
+                .firstOrNull() ?: ""
+
+            val endStationName = Stations
+                .select(Stations.columns)
+                .where { Stations.station_id eq endStationId }
+                .map { r -> r[Stations.station_name] }
+                .firstOrNull() ?: ""
+
             arriveDTO(
-                it[Arrive.id],
-                it[Arrive.bus_id],
-                it[Buses.bus_name],
-                it[Arrive.station_id],
-                it[Stations.station_name],
-                it[Buses.station_start],
-                Stations.select(Stations.station_name).where { Stations.station_id eq it[Buses.station_start] }.first()[Stations.station_name],
-                Arrive.select(Arrive.columns).where { Arrive.bus_id eq Arrive.bus_id}.first()[Arrive.arrive_time],
-                it[Buses.station_end],
-                Stations.select(Stations.station_name).where { Stations.station_id eq it[Buses.station_end] }.first()[Stations.station_name],
-                Arrive.select(Arrive.columns).where { Arrive.bus_id eq Arrive.bus_id}.last()[Arrive.arrive_time],
-                it[Arrive.load],
-                it[Arrive.arrive_time]
+                row[Arrive.id],
+                busId,
+                row[Buses.bus_name],
+                row[Arrive.station_id],
+                row[Stations.station_name],
+                startStationId,
+                startStationName,
+                arriveStart ?: row[Arrive.arrive_time],
+                endStationId,
+                endStationName,
+                arriveEnd ?: row[Arrive.arrive_time],
+                row[Arrive.load],
+                row[Arrive.arrive_time]
             )
         }
 }
 
-//Функция, подобная выше, но также сортирует по конечной точке, а не по всем прибывающим автобусам
+// Функция, аналогичная getarrive, но фильтрует по конечной станции автобуса (Buses.station_end)
 fun getarriveSortEnd(_id: Int, _end: Int) : List<arriveDTO> = transaction {
-    Arrive
+    (Arrive
         .innerJoin(Buses)
-        .innerJoin(Stations)
-        .select(Arrive.columns)
-        .where {
-            (Stations.station_id eq _id) and (Stations.station_id eq Arrive.station_id) and (Buses.bus_id eq Arrive.bus_id) and (Arrive.station_id eq _end)
-        }.withDistinct().map{
+        .innerJoin(Stations))
+        .selectAll()
+        .where { (Stations.station_id eq _id) and (Arrive.station_id eq Stations.station_id) and (Arrive.bus_id eq Buses.bus_id) and (Buses.station_end eq _end) }
+        .withDistinct()
+        .map { row ->
+            val busId = row[Arrive.bus_id]
+            val startStationId = row[Buses.station_start]
+            val endStationId = row[Buses.station_end]
+
+            val arriveStart = Arrive
+                .select(Arrive.columns)
+                .where { (Arrive.bus_id eq busId) and (Arrive.station_id eq startStationId) }
+                .map { r -> r[Arrive.arrive_time] }
+                .firstOrNull()
+
+            val arriveEnd = Arrive
+                .select(Arrive.columns)
+                .where { (Arrive.bus_id eq busId) and (Arrive.station_id eq endStationId) }
+                .map { r -> r[Arrive.arrive_time] }
+                .lastOrNull()
+
+            val startStationName = Stations
+                .select(Stations.columns)
+                .where { Stations.station_id eq startStationId }
+                .map { r -> r[Stations.station_name] }
+                .firstOrNull() ?: ""
+
+            val endStationName = Stations
+                .select(Stations.columns)
+                .where { Stations.station_id eq endStationId }
+                .map { r -> r[Stations.station_name] }
+                .firstOrNull() ?: ""
+
             arriveDTO(
-                it[Arrive.id],
-                it[Arrive.bus_id],
-                it[Buses.bus_name],
-                it[Arrive.station_id],
-                it[Stations.station_name],
-                it[Buses.station_start],
-                Stations.select(Stations.station_name).where { Stations.station_id eq it[Buses.station_start] }.first()[Stations.station_name],
-                Arrive.select(Arrive.columns).where { Arrive.bus_id eq Arrive.bus_id}.first()[Arrive.arrive_time],
-                it[Buses.station_end],
-                Stations.select(Stations.station_name).where { Stations.station_id eq it[Buses.station_end] }.first()[Stations.station_name],
-                Arrive.select(Arrive.columns).where { Arrive.bus_id eq Arrive.bus_id}.last()[Arrive.arrive_time],
-                it[Arrive.load],
-                it[Arrive.arrive_time]
+                row[Arrive.id],
+                busId,
+                row[Buses.bus_name],
+                row[Arrive.station_id],
+                row[Stations.station_name],
+                startStationId,
+                startStationName,
+                arriveStart ?: row[Arrive.arrive_time],
+                endStationId,
+                endStationName,
+                arriveEnd ?: row[Arrive.arrive_time],
+                row[Arrive.load],
+                row[Arrive.arrive_time]
             )
         }
 }
